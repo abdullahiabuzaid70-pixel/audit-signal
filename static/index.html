@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuditSignal — Audit Intelligence</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .sev-critical { background:#FEE2E2; color:#DC2626; padding:2px 9px; border-radius:6px; font-size:11px; font-weight:700; }
+  .sev-high { background:#FFEDD5; color:#EA580C; padding:2px 9px; border-radius:6px; font-size:11px; font-weight:700; }
+  .sev-medium { background:#FEF3C7; color:#CA8A04; padding:2px 9px; border-radius:6px; font-size:11px; font-weight:700; }
+  .sev-low { background:#DBEAFE; color:#2563EB; padding:2px 9px; border-radius:6px; font-size:11px; font-weight:700; }
+  .tab-btn.active { border-color:#1E3A5F; color:#1E3A5F; background:#F0F5FA; }
+  .bar { height:8px; border-radius:4px; background:#1E3A5F; min-width:2px; }
+  table { font-size:12.5px; }
+  .why-panel { border-left:3px solid #1E3A5F; }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+<header class="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-800 px-6 py-4 shadow-lg">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div>
+      <h1 class="text-white text-xl font-extrabold tracking-tight">AuditSignal</h1>
+      <p class="text-slate-400 text-xs mt-0.5">Out of thousands of transactions — where should the auditor look first, and why.</p>
+    </div>
+    <button id="loadBtn" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow">Load Demo Case</button>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-6 py-2">
+  <div class="bg-amber-50 border border-amber-300 text-amber-800 rounded-lg px-4 py-2 text-[11.5px] mt-3">
+    ⚠️ Standalone prototype using <b>synthetic demo data only</b>. Not an official Nigeria Revenue Service product — no government ownership, approval or affiliation is claimed or implied. Risk signals are analytical exceptions requiring human review, never findings of fraud or law.
+  </div>
+</div>
+
+<!-- Initial state -->
+<div id="emptyState" class="max-w-3xl mx-auto mt-24 text-center">
+  <div class="text-5xl mb-4">🔎</div>
+  <h2 class="text-xl font-bold text-slate-900">No case loaded</h2>
+  <p class="text-sm text-slate-500 mt-2">Click <b>Load Demo Case</b> to generate a fictional taxpayer with ~5,000 synthetic transactions and run the risk engine.</p>
+</div>
+
+<!-- Main app (hidden until loaded) -->
+<main id="app" class="max-w-7xl mx-auto px-6 py-4 hidden">
+  <nav class="flex gap-2 border-b border-slate-300 pb-px">
+    <button class="tab-btn active px-4 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn px-4 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent" data-tab="queue">Risk Queue</button>
+    <button class="tab-btn px-4 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent" data-tab="txns">Transactions</button>
+    <button class="tab-btn px-4 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent" data-tab="log">Decisions &amp; Log</button>
+    <button class="tab-btn px-4 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent" data-tab="report">Report</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard" class="tab-pane pt-6">
+    <div id="metrics" class="grid grid-cols-2 md:grid-cols-5 gap-3"></div>
+    <div class="grid md:grid-cols-2 gap-6 mt-8">
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-900 mb-3">Risk signals by category</h3>
+        <div id="catBars" class="space-y-2.5"></div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-900 mb-3">Case</h3>
+        <div id="caseInfo" class="text-sm text-slate-600 space-y-1.5"></div>
+        <h3 class="text-sm font-bold text-slate-900 mt-5 mb-2">Top priority signals</h3>
+        <div id="topSignals" class="space-y-2"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RISK QUEUE -->
+  <section id="tab-queue" class="tab-pane pt-4 hidden">
+    <p class="text-xs text-slate-500 mb-3">Every signal is an exception requiring review — not an allegation. Press <b>SHOW ME WHY</b> for the full evidence.</p>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <select id="sevFilter" class="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">
+        <option value="">All severities</option>
+        <option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
+      </select>
+      <select id="catFilter" class="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white"></select>
+      <input id="queueSearch" placeholder="Search signals…" class="text-sm border border-slate-300 rounded-lg px-3 py-2 flex-1 min-w-[180px]">
+    </div>
+    <div id="signalList" class="space-y-3"></div>
+  </section>
+
+  <!-- TRANSACTIONS -->
+  <section id="tab-txns" class="tab-pane pt-4 hidden">
+    <div class="flex gap-2 mb-3">
+      <input id="txnSearch" placeholder="Search description, supplier, invoice…" class="text-sm border border-slate-300 rounded-lg px-3 py-2 flex-1">
+      <button id="txnPrev" class="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">‹ Prev</button>
+      <button id="txnNext" class="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">Next ›</button>
+    </div>
+    <p id="txnInfo" class="text-xs text-slate-500 mb-2"></p>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <table class="w-full whitespace-nowrap" id="txnTable"></table>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section id="tab-log" class="tab-pane pt-4 hidden">
+    <h3 class="text-sm font-bold mb-2">Recorded decisions</h3>
+    <div id="decList" class="space-y-2 mb-8"></div>
+    <h3 class="text-sm font-bold mb-2">Audit trail (append-only)</h3>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <table class="w-full" id="logTable"></table>
+    </div>
+  </section>
+
+  <!-- REPORT -->
+  <section id="tab-report" class="tab-pane pt-6 hidden max-w-xl">
+    <div class="bg-white rounded-xl border border-slate-200 p-6 text-center">
+      <h3 class="font-bold text-slate-900">Working-paper / findings report</h3>
+      <p class="text-sm text-slate-500 mt-2">Machine analysis and human-approved findings are clearly separated. Includes the analytical-assistance disclaimer.</p>
+      <a href="/api/report" class="inline-block mt-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-6 py-2.5 rounded-lg shadow">Download PDF report</a>
+    </div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

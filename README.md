@@ -1,17 +1,6 @@
----
-title: AuditSignal
-emoji: 🔎
-colorFrom: blue
-colorTo: navy
-sdk: streamlit
-sdk_version: 1.45.1
-app_file: app.py
-pinned: false
----
-
 # AuditSignal
 
-Tax audit intelligence MVP (lean prototype).
+Tax audit intelligence MVP (lean prototype) — FastAPI backend + web UI.
 
 Out of thousands of transactions — where should the auditor look first, and why?
 
@@ -31,10 +20,22 @@ Risk signals are analytical exceptions requiring human review — never findings
   with mandatory rationale
 - Append-only audit log
 - Working-paper PDF report separating machine analysis from human-approved findings
-- Configurable rule parameters (VAT/WHT rates) — rates are parameters, not legal truth
 
-## Run
+## Run locally
 ```
 pip install -r requirements.txt
-streamlit run app.py
+uvicorn main:app --reload
 ```
+Open http://localhost:8000
+
+## Deploy (Railway)
+Connect this repo in Railway — the Procfile handles the start command.
+
+## API
+- POST /api/case/load — generate demo case + run risk engine
+- GET /api/summary — dashboard metrics
+- GET /api/signals — risk queue (filter by category/severity/search)
+- GET /api/signals/{id} — SHOW ME WHY detail
+- GET /api/transactions — paginated, searchable
+- POST /api/decisions — record auditor decision (rationale required)
+- GET /api/report — working-paper PDF
