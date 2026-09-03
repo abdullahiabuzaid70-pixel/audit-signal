@@ -62,6 +62,16 @@ function renderSummary(s) {
       <div class="bar" style="width:${(n / maxC) * 100}%"></div>
     </div>`).join("");
 
+  fetch("/api/signals").then((r) => r.json()).then((sigs) => {
+    $("#topSignals").innerHTML = sigs.slice(0, 5).map((t) => `
+      <div class="flex items-center gap-2 text-xs">
+        <span class="font-extrabold text-slate-900">${t.score.toFixed(0)}</span>
+        <span class="sev-${t.severity}">${t.severity.toUpperCase()}</span>
+        <span class="font-semibold">${t.category}</span>
+        <span class="text-slate-500">${fmtN(t.affected_amount)}</span>
+      </div>`).join("");
+  });
+
   const m = s.case_meta;
   $("#caseInfo").innerHTML = [
     ["Case", m.case_number], ["Taxpayer", `${m.taxpayer_name} — ${m.taxpayer_id}`],
