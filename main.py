@@ -131,7 +131,8 @@ def list_transactions(page: int = 1, per_page: int = 25, search: str = ""):
     if search:
         mask = (df["description"].str.contains(search, case=False)
                 | df["supplier_name"].str.contains(search, case=False)
-                | df["invoice_no"].str.contains(search, case=False))
+                | df["invoice_no"].str.contains(search, case=False)
+                | df["category"].str.contains(search, case=False))
         df = df[mask]
     total = len(df)
     start = (page - 1) * per_page
