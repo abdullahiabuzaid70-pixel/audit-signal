@@ -1,11 +1,22 @@
+---
+title: AuditSignal
+emoji: 🔎
+colorFrom: blue
+colorTo: navy
+sdk: streamlit
+sdk_version: 1.45.1
+app_file: app.py
+pinned: false
+---
+
 # AuditSignal
 
 Tax audit intelligence MVP (lean prototype).
 
 Out of thousands of transactions — where should the auditor look first, and why?
 
-**Standalone prototype using synthetic demo data only.** Not an official Nigeria Revenue
-Service product; no government ownership, approval or affiliation is claimed or implied.
+**Standalone prototype using synthetic demo data only.** Not an official Nigeria
+Revenue Service product; no government ownership, approval or affiliation is claimed or implied.
 Risk signals are analytical exceptions requiring human review — never findings of fraud or law.
 
 ## Features
